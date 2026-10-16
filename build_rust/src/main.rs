@@ -219,12 +219,17 @@ fn check_release(force_release_on_windows: bool) -> (bool, &'static str) {
 
 /// Returns target list to pass to cargo ndk
 fn add_android_rust_targets(all_archs: bool) -> Result<&'static [&'static str]> {
-    // ANDROID_ARCH=arm64 builds only aarch64 (for sideloading onto a physical phone)
+    // ANDROID_ARCH=arm64 builds only aarch64 (for sideloading onto a physical phone), armv7 only 32-bit ARM
     if let Ok(arch) = env::var("ANDROID_ARCH") {
         return Ok(match arch.as_str() {
             "arm64" | "arm64-v8a" | "aarch64" => {
                 add_rust_targets(&["aarch64-linux-android"])?;
                 &["-t", "arm64-v8a"]
+            }
+            // 32-bit ARM, e.g. Google TVs
+            "armv7" | "armeabi-v7a" => {
+                add_rust_targets(&["armv7-linux-androideabi"])?;
+                &["-t", "armeabi-v7a"]
             }
             other => panic!("unsupported ANDROID_ARCH: {other}"),
         });
